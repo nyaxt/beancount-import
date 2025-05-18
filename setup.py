@@ -116,7 +116,8 @@ class BundleFrontendCommand(setuptools.command.build_py.build_py):
         if self.skip_rebuild:
             bundle_path = os.path.join(frontend_dist_dir, 'app.js')
             if os.path.exists(bundle_path):
-                print('Skipping rebuild of frontend bundle since %s already exists' % (bundle_path, ))
+                print('Skipping rebuild of frontend bundle since %s already exists' % (
+                    bundle_path, ))
                 return
 
         target = {"min": "build", "dev": "builddev"}
@@ -129,7 +130,8 @@ class BundleFrontendCommand(setuptools.command.build_py.build_py):
                       (node_modules_path, ))
             else:
                 subprocess.call('npm i', shell=True, cwd=frontend_dir)
-            res = subprocess.call('npm run %s' % t, shell=True, cwd=frontend_dir)
+            res = subprocess.call('npm run %s' %
+                                  t, shell=True, cwd=frontend_dir)
         except:
             raise RuntimeError('Could not run \'npm run %s\'.' % t)
 
@@ -165,7 +167,7 @@ setuptools.setup(
     python_requires='>=3.8',
     setup_requires=['setuptools_scm>=5.0.2'],
     install_requires=[
-        'beancount<3',
+        'beancount',  # <3',
         'tornado',
         'numpy',
         'scipy',
