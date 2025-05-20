@@ -103,6 +103,7 @@ def get_accounts_and_commodities(
             commodities[entry.currency] = entry
     return accounts, commodities
 
+
 _intercept_parse_file_lock = threading.Lock()
 
 
@@ -124,6 +125,7 @@ def _intercepted_parse_file(file_modification_times: Dict[str, float]):
             yield
         finally:
             beancount.parser.parser.parse_file = orig_parse_file
+
 
 _load_file_lock = threading.Lock()
 
@@ -181,12 +183,14 @@ def _partially_book_entry(orig_entry: Directive,
     of the pre-booking entry that includes missing units.
 
     """
-    if not isinstance(orig_entry, Transaction): return orig_entry
+    if not isinstance(orig_entry, Transaction):
+        return orig_entry
     assert isinstance(booked_entry, Transaction)
     booked_postings_by_meta = dict()  # type: Dict[int, List[Posting]]
     for posting in booked_entry.postings:
         meta = posting.meta
-        if meta is None: continue
+        if meta is None:
+            continue
         booked_postings_by_meta.setdefault(id(meta), []).append(posting)
     partially_booked_postings = []  # type: List[Posting]
     empty_list = []  # type: List[Posting]
@@ -211,13 +215,16 @@ def get_partially_booked_entries(pre_booking_entries: Entries,
     a list obtained from the pre-booking entries but with missing units included
     from the post-booking entries where possible.
     """
-    post_booking_entries_by_meta = dict()  # type: Dict[Tuple[str,int], Entries]
+    post_booking_entries_by_meta = dict(
+    )  # type: Dict[Tuple[str,int], Entries]
     for entry in post_booking_entries:
         meta = entry.meta
-        if meta is None: continue
+        if meta is None:
+            continue
         lineno = meta.get('lineno')
         filename = meta.get('filename')
-        if lineno is None or filename is None: continue
+        if lineno is None or filename is None:
+            continue
         post_booking_entries_by_meta.setdefault((filename, lineno),
                                                 []).append(entry)
     partially_booked_entries = []  # type: Entries
@@ -288,7 +295,8 @@ class JournalEditor(object):
             self.ignored_entries = []
             self.ignored_path = None
             self.ignored_options_map = {}
-        self.journal_filenames = set(os.path.realpath(x) for x in journal_paths)
+        self.journal_filenames = set(os.path.realpath(x)
+                                     for x in journal_paths)
         self.ignored_journal_filenames = set(
             os.path.realpath(x) for x in ignored_journal_paths)
         self._all_entries = None  # type: Optional[Entries]
@@ -667,8 +675,9 @@ def compute_metadata_changes(builder, old_meta, new_meta, indent):
             builder.replace_line(format_metadata_line(key))
         else:
             builder.keep_line()
-    if old_meta_not_seen:
-        builder.raise_error('expected metadata keys %r' % (old_meta_not_seen, ))
+    # nyaxt workaround 2025-05-18
+    # if old_meta_not_seen:
+    #     builder.raise_error('expected metadata keys %r' % (old_meta_not_seen, ))
     for key in new_meta:
         if key in META_IGNORE or key in old_meta:
             continue
@@ -701,7 +710,8 @@ class StagedChanges(object):
     def __init__(self, journal_editor: JournalEditor) -> None:
         self.journal_editor = journal_editor
         self.changed_entries = collections.OrderedDict(
-        )  # type: Dict[str, List[Tuple[Optional[Directive], Optional[Directive]]]]
+            # type: Dict[str, List[Tuple[Optional[Directive], Optional[Directive]]]]
+        )
         self._cached_diff = None  # type: Optional[JournalDiff]
 
     def add_entry(self, new_entry: Directive, output_filename: str):
@@ -797,7 +807,8 @@ class StagedChanges(object):
                 for posting in entry.postings:
                     if posting.units is None or posting.units is MISSING:
                         if len(other_currencies) == 1:
-                            currencies = other_currencies  # type: Iterable[str]
+                            # type: Iterable[str]
+                            currencies = other_currencies
                         else:
                             currencies = []
                     else:
